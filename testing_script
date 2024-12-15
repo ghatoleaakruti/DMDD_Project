@@ -1,0 +1,101 @@
+USE HealthcareDB;
+GO
+
+-- ============================
+-- Step 1: Execute Views
+-- ============================
+PRINT 'Executing Views...';
+GO
+
+SELECT * FROM dbo.vw_PatientInsurance;
+SELECT * FROM dbo.vw_DepartmentDoctorSummary;
+SELECT * FROM dbo.vw_AppointmentDetails;
+SELECT * FROM dbo.vw_BillingSummary;
+SELECT * FROM dbo.vw_MedicalRecordSummary;
+GO
+
+-- ============================
+-- Step 2: Execute Stored Procedures with Correct Parameters
+-- ============================
+USE HealthcareDB;
+GO
+
+-- ============================
+-- Step 2: Execute Stored Procedures with Correct Parameters
+-- ============================
+PRINT 'Executing Stored Procedures...';
+GO
+
+-- Procedure: GetPatientDetails
+DECLARE @Name NVARCHAR(100), @ContactInfo NVARCHAR(100);
+EXEC GetPatientDetails @PatientID = 'P005', @Name = @Name OUTPUT, @ContactInfo = @ContactInfo OUTPUT;
+PRINT 'Patient Name: ' + @Name;
+PRINT 'Contact Info: ' + @ContactInfo;
+GO
+
+-- Procedure: GetAppointmentsByDoctor
+DECLARE @AppointmentCount INT;
+EXEC GetAppointmentsByDoctor @DoctorID = 'Doc001', @AppointmentCount = @AppointmentCount OUTPUT;
+SELECT @AppointmentCount AS AppointmentCount;
+GO
+
+-- Procedure: CalculateTotalBilling
+DECLARE @TotalAmount DECIMAL(10, 2);
+EXEC CalculateTotalBilling @PatientID = 'P003', @TotalAmount = @TotalAmount OUTPUT;
+PRINT 'Total Billing Amount: ' + CAST(@TotalAmount AS NVARCHAR(10));
+GO
+
+-- Procedure: GetAvailableDoctors
+DECLARE @DoctorList NVARCHAR(MAX);
+EXEC GetAvailableDoctors @Specialty = 'Cardiologist', @DoctorList = @DoctorList OUTPUT;
+SELECT @DoctorList AS AvailableDoctors;
+GO
+
+-- Procedure: GetPatientsWithoutAppointments
+DECLARE @NoAppointmentList NVARCHAR(MAX);
+EXEC GetPatientsWithoutAppointments @NoAppointmentList = @NoAppointmentList OUTPUT;
+SELECT @NoAppointmentList AS PatientsWithoutAppointments;
+
+
+-- ============================
+-- Step 3: Verify Indexes by Running Sample Queries
+-- ============================
+PRINT 'Verifying Indexes...';
+GO
+
+SELECT * FROM Appointment WHERE DoctorID = 'Doc001';
+SELECT * FROM Appointment WHERE AppointmentDate BETWEEN '2024-01-01' AND '2024-12-31';
+SELECT * FROM Appointment WHERE PatientID = 'P001'; -- Uses IDX_PatientID_Appointments
+SELECT * FROM Appointment WHERE AppointmentDate = '2024-08-18' AND DoctorID = 'Doc008';
+SELECT * FROM Patient WHERE Name = 'John Doe'; -- Uses IDX_PatientName
+GO
+
+-- ============================
+-- Step 4: Test Triggers by Performing Sample DML Operations
+-- ============================
+PRINT 'Testing Triggers...';
+GO
+
+-- Insert to test trg_PatientAudit
+INSERT INTO Patient (PatientID, Name, DoB, Gender, Contact, InsuranceID)
+VALUES ('P0013', 'John Doe', '1990-01-01', 'M', '987-654-3210', 'I002');
+
+-- Update to test trg_PatientAudit
+UPDATE Patient SET Contact = '555-555-5555' WHERE PatientID = 'P002';
+
+select * from PatientLog
+GO
+
+-- ============================
+-- Step 5: Execute User-Defined Functions
+-- ============================
+PRINT 'Executing User-Defined Functions...';
+GO
+SELECT dbo.fn_GetPatientAge('1990-08-15') AS Age;
+SELECT dbo.fn_GetTotalBilled('P001') AS TotalBilled;
+SELECT dbo.fn_IsInsuranceValid('I001') AS IsValidInsurance;
+SELECT dbo.fn_GetDoctorAppointmentCount('Doc001') AS AppointmentCount;
+SELECT dbo.fn_GetAvgTreatmentCost('D001') AS AvgCost;
+GO
+
+PRINT 'Execution of All Components Completed Successfully!';

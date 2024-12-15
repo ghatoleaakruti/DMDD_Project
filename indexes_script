@@ -1,0 +1,43 @@
+use HealthcareDB
+go
+--Non Clustered Indexes
+
+-- Index 1: Non-clustered index on DoctorID for quick appointment lookup
+CREATE NONCLUSTERED INDEX IDX_DoctorID_Appointments
+ON Appointment (DoctorID);
+
+-- Test for IDX_DoctorID_Appointments
+SELECT * FROM Appointment
+WHERE DoctorID = 'Doc001';
+
+-- Index 2: Non-clustered index on AppointmentDate for date-based searches
+CREATE NONCLUSTERED INDEX IDX_AppointmentDate
+ON Appointment(AppointmentDate);
+
+-- Test for IDX_AppointmentDate
+SELECT * FROM Appointment
+WHERE AppointmentDate BETWEEN '2024-01-01' AND '2024-12-31';
+
+-- Index 3: Non-clustered index on PatientID for patient appointment history
+CREATE NONCLUSTERED INDEX IDX_PatientID_Appointments
+ON Appointment (PatientID);
+
+-- Test for IDX_PatientID_Appointments
+SELECT * FROM Appointment
+WHERE PatientID = 'P001';
+
+-- Index 4: Composite non-clustered index on AppointmentDate and DoctorID
+CREATE NONCLUSTERED INDEX IDX_AppointmentDate_DoctorID
+ON Appointment (AppointmentDate, DoctorID);
+
+-- Test for IDX_AppointmentDate_DoctorID
+SELECT * FROM Appointment
+WHERE AppointmentDate = '2024-08-18' AND DoctorID = 'Doc008';
+
+-- Index 5: Non-clustered index on PatientName in Patients table
+CREATE NONCLUSTERED INDEX IDX_PatientName
+ON Patient (Name);
+
+-- Test for IDX_PatientName
+SELECT * FROM Patient
+WHERE Name LIKE 'John%';

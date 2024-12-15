@@ -1,0 +1,46 @@
+use HealthcareDB
+go
+-- Step 1: Create a Master Key for encryption
+CREATE MASTER KEY ENCRYPTION BY PASSWORD = 'StrongPassword123!';
+
+-- Step 2: Create a Certificate for encryption
+CREATE CERTIFICATE PatientCert
+WITH SUBJECT = 'Encryption for Patient Contact';
+
+-- Step 3: Create a Symmetric Key for column encryption
+CREATE SYMMETRIC KEY PatientSymKey
+WITH ALGORITHM = AES_256
+ENCRYPTION BY CERTIFICATE PatientCert;
+
+-- Step 4: Add a new column for encrypted data
+ALTER TABLE Patient
+ADD EncryptedContact VARBINARY(MAX);
+
+-- Step 5: Open the Symmetric Key for encryption
+OPEN SYMMETRIC KEY PatientSymKey
+DECRYPTION BY CERTIFICATE PatientCert;
+
+-- Step 6: Encrypt data from the Contact column and store it in the new EncryptedContact column
+UPDATE Patient
+SET EncryptedContact = ENCRYPTBYKEY(KEY_GUID('PatientSymKey'), CAST(Contact AS NVARCHAR(MAX)));
+
+-- Step 7: Close the Symmetric Key after encryption
+CLOSE SYMMETRIC KEY PatientSymKey;
+
+-- Step 8: Query to decrypt and view Contact data from the EncryptedContact column
+OPEN SYMMETRIC KEY PatientSymKey
+DECRYPTION BY CERTIFICATE PatientCert;
+
+SELECT 
+    PatientID, 
+    Name,
+    CONVERT(VARCHAR(15), DECRYPTBYKEY(EncryptedContact)) AS DecryptedContact
+FROM Patient;
+
+CLOSE SYMMETRIC KEY PatientSymKey;
+
+--optional testing
+SELECT PatientID, EncryptedContact FROM Patient;
+
+
+

@@ -1,0 +1,158 @@
+INSERT INTO dbo.Insurance (InsuranceID, ProviderName, PolicyNumber, ExpirationDate, Coverage)
+VALUES 
+('I001', 'Blue Cross', 'POL001', DATEADD(MONTH, 6, GETDATE()), 'Full Coverage'),
+('I002', 'Aetna', 'POL002', DATEADD(MONTH, 12, GETDATE()), 'Partial Coverage'),
+('I003', 'Cigna', 'POL003', DATEADD(MONTH, 18, GETDATE()), 'Full Coverage'),
+('I004', 'United Healthcare', 'POL004', DATEADD(MONTH, 24, GETDATE()), 'Emergency Only'),
+('I005', 'Humana', 'POL005', DATEADD(MONTH, 30, GETDATE()), 'Full Coverage'),
+('I006', 'Anthem', 'POL006', DATEADD(MONTH, 36, GETDATE()), 'Partial Coverage'),
+('I007', 'Kaiser Permanente', 'POL007', DATEADD(MONTH, 12, GETDATE()), 'Full Coverage'),
+('I008', 'MediCare', 'POL008', DATEADD(MONTH, 18, GETDATE()), 'Emergency Only'),
+('I009', 'Oscar Health', 'POL009', DATEADD(MONTH, 24, GETDATE()), 'Full Coverage'),
+('I010', 'Health Net', 'POL010', DATEADD(MONTH, 30, GETDATE()), 'Partial Coverage');
+
+INSERT INTO Patient (PatientID, Name, DoB, Gender, Contact, InsuranceID)
+VALUES 
+('P001', 'John Doe', '1980-02-20', 'M', '123-456-7890', 'I001'),
+('P002', 'Jane Smith', '1992-05-15', 'F', '123-456-7891', 'I002'),
+('P003', 'Alice Johnson', '1975-09-10', 'F', '123-456-7892', 'I003'),
+('P004', 'Bob Brown', '1988-11-30', 'M', '123-456-7893', 'I004'),
+('P005', 'Charlie Davis', '2000-01-01', 'M', '123-456-7894', 'I005'),
+('P006', 'Diana Green', '1995-07-21', 'F', '123-456-7895', 'I006'),
+('P007', 'Eve White', '1999-12-25', 'F', '123-456-7896', 'I007'),
+('P008', 'Frank Black', '1982-03-15', 'M', '123-456-7897', 'I008'),
+('P009', 'Grace Blue', '1990-08-04', 'F', '123-456-7898', 'I009'),
+('P010', 'Henry Grey', '1985-10-30', 'M', '123-456-7899', 'I010');
+
+INSERT INTO Address (AddressID, PatientID, StreetAddress, UnitNumber, City, State, ZipCode, HomePhone)
+VALUES 
+('A001', 'P001', '123 Main St', 'Apt 1', 'Springfield', 'IL', '62701', '123-456-7890'),
+('A002', 'P002', '456 Oak St', 'Apt 2', 'Decatur', 'IL', '62521', '123-456-7891'),
+('A003', 'P003', '789 Pine St', NULL, 'Champaign', 'IL', '61820', '123-456-7892'),
+('A004', 'P004', '101 Maple St', 'Apt 3', 'Peoria', 'IL', '61602', '123-456-7893'),
+('A005', 'P005', '202 Elm St', NULL, 'Chicago', 'IL', '60601', '123-456-7894'),
+('A006', 'P006', '303 Birch St', 'Apt 4', 'Naperville', 'IL', '60563', '123-456-7895'),
+('A007', 'P007', '404 Cedar St', NULL, 'Rockford', 'IL', '61101', '123-456-7896'),
+('A008', 'P008', '505 Redwood St', 'Apt 5', 'Aurora', 'IL', '60505', '123-456-7897'),
+('A009', 'P009', '606 Willow St', NULL, 'Evanston', 'IL', '60201', '123-456-7898'),
+('A010', 'P010', '707 Chestnut St', 'Apt 6', 'Peoria', 'IL', '61603', '123-456-7899');
+
+INSERT INTO Department (DepartmentID, DepartmentName, HeadOfDepartment)
+VALUES 
+('D001', 'Cardiology', 'Dr. Mary Jones'),
+('D002', 'Orthopedics', 'Dr. John Doe'),
+('D003', 'Pediatrics', 'Dr. Sarah Lee'),
+('D004', 'Neurology', 'Dr. Mark Smith'),
+('D005', 'General Surgery', 'Dr. Emily Brown'),
+('D006', 'Dermatology', 'Dr. Robert Clark'),
+('D007', 'Psychiatry', 'Dr. Julia Davis'),
+('D008', 'Radiology', 'Dr. Linda Wilson'),
+('D009', 'Emergency', 'Dr. James White'),
+('D010', 'Anesthesiology', 'Dr. Karen Black');
+
+INSERT INTO Doctor (DoctorID, FirstName, LastName, Specialty, DepartmentID, ExperienceYears)
+VALUES 
+('Doc001', 'Mary', 'Jones', 'Cardiologist', 'D001', 10),
+('Doc002', 'John', 'Doe', 'Orthopedic Surgeon', 'D002', 12),
+('Doc003', 'Sarah', 'Lee', 'Pediatrician', 'D003', 8),
+('Doc004', 'Mark', 'Smith', 'Neurologist', 'D004', 15),
+('Doc005', 'Emily', 'Brown', 'General Surgeon', 'D005', 9),
+('Doc006', 'Robert', 'Clark', 'Dermatologist', 'D006', 6),
+('Doc007', 'Julia', 'Davis', 'Psychiatrist', 'D007', 7),
+('Doc008', 'Linda', 'Wilson', 'Radiologist', 'D008', 5),
+('Doc009', 'James', 'White', 'Emergency Physician', 'D009', 11),
+('Doc010', 'Karen', 'Black', 'Anesthesiologist', 'D010', 14);
+
+INSERT INTO Appointment (AppointmentID, AppointmentDate, PatientID, DoctorID)
+VALUES 
+('A001', '2024-01-15 09:00:00', 'P001', 'Doc001'),
+('A002', '2024-02-20 10:00:00', 'P002', 'Doc002'),
+('A003', '2024-03-25 14:00:00', 'P003', 'Doc003'),
+('A004', '2024-04-30 11:00:00', 'P004', 'Doc004'),
+('A005', '2024-05-15 13:00:00', 'P005', 'Doc005'),
+('A006', '2024-06-20 09:30:00', 'P006', 'Doc006'),
+('A007', '2024-07-10 08:00:00', 'P007', 'Doc007'),
+('A008', '2024-08-18 15:00:00', 'P008', 'Doc008'),
+('A009', '2024-09-05 11:30:00', 'P009', 'Doc009'),
+('A010', '2024-10-01 10:30:00', 'P010', 'Doc010');
+
+INSERT INTO Billing (BillID, PatientID, AppointmentID, InsuranceID, TotalAmount, PaymentStatus)
+VALUES 
+('B001', 'P001', 'A001', 'I001', 500.00, 'Paid'),
+('B002', 'P002', 'A002', 'I002', 300.00, 'Unpaid'),
+('B003', 'P003', 'A003', 'I003', 450.00, 'Paid'),
+('B004', 'P004', 'A004', 'I004', 700.00, 'Paid'),
+('B005', 'P005', 'A005', 'I005', 250.00, 'Unpaid'),
+('B006', 'P006', 'A006', 'I006', 650.00, 'Paid'),
+('B007', 'P007', 'A007', 'I007', 400.00, 'Unpaid'),
+('B008', 'P008', 'A008', 'I008', 350.00, 'Paid'),
+('B009', 'P009', 'A009', 'I009', 550.00, 'Unpaid'),
+('B010', 'P010', 'A010', 'I010', 200.00, 'Paid');
+
+INSERT INTO AdminStaff (StaffID, Role, BillID, AppointmentID)
+VALUES 
+('S001', 'Receptionist', 'B001', 'A001'),
+('S002', 'Billing Clerk', 'B002', 'A002'),
+('S003', 'Manager', 'B003', 'A003'),
+('S004', 'Receptionist', 'B004', 'A004'),
+('S005', 'Billing Clerk', 'B005', 'A005'),
+('S006', 'Manager', 'B006', 'A006'),
+('S007', 'Receptionist', 'B007', 'A007'),
+('S008', 'Billing Clerk', 'B008', 'A008'),
+('S009', 'Manager', 'B009', 'A009'),
+('S010', 'Receptionist', 'B010', 'A010');
+
+INSERT INTO Nurse (NurseID, FirstName, LastName, DepartmentID, ExperienceYears)
+VALUES 
+('N001', 'Jessica', 'Taylor', 'D001', 5),
+('N002', 'Olivia', 'Martinez', 'D002', 6),
+('N003', 'Sophia', 'Williams', 'D003', 4),
+('N004', 'Ava', 'Davis', 'D004', 7),
+('N005', 'Isabella', 'Miller', 'D005', 3),
+('N006', 'Charlotte', 'Wilson', 'D006', 5),
+('N007', 'Amelia', 'Moore', 'D007', 6),
+('N008', 'Mia', 'Taylor', 'D008', 2),
+('N009', 'Harper', 'Brown', 'D009', 8),
+('N010', 'Evelyn', 'Smith', 'D010', 9);
+
+INSERT INTO MedicalRecord (RecordID, PatientID, AppointmentID, DoctorID, Diagnosis, TreatmentPlan, Prescription)
+VALUES 
+('M001', 'P001', 'A001', 'Doc001', 'Heart Disease', 'Lifestyle changes, Medication', 'Aspirin 81mg'),
+('M002', 'P002', 'A002', 'Doc002', 'Fracture', 'Surgery', 'Painkiller'),
+('M003', 'P003', 'A003', 'Doc003', 'Cold', 'Rest and fluids', 'Vitamin C'),
+('M004', 'P004', 'A004', 'Doc004', 'Migraine', 'Pain Management', 'Ibuprofen'),
+('M005', 'P005', 'A005', 'Doc005', 'Appendicitis', 'Surgery', 'None'),
+('M006', 'P006', 'A006', 'Doc006', 'Skin Infection', 'Topical ointment', 'Antibiotic cream'),
+('M007', 'P007', 'A007', 'Doc007', 'Depression', 'Therapy', 'Antidepressants'),
+('M008', 'P008', 'A008', 'Doc008', 'X-ray analysis', 'Continue observation', 'None'),
+('M009', 'P009', 'A009', 'Doc009', 'Emergency Surgery', 'Immediate Surgery', 'Pain relief'),
+('M010', 'P010', 'A010', 'Doc010', 'Anesthesia', 'Monitor during procedure', 'None');
+
+-- Insert into Treatment table
+INSERT INTO Treatment (TreatmentID, AppointmentID, DoctorID, NurseID, Description, Cost)
+VALUES 
+('Trt001', 'A001', 'Doc001', 'N001', 'Heart bypass surgery', 2000.00),
+('Trt002', 'A002', 'Doc002', 'N002', 'Knee replacement', 1500.00),
+('Trt003', 'A003', 'Doc003', 'N003', 'Dental cleaning', 250.00),
+('Trt004', 'A004', 'Doc004', 'N004', 'Cataract surgery', 1200.00),
+('Trt005', 'A005', 'Doc005', 'N005', 'Lung biopsy', 1800.00),
+('Trt006', 'A006', 'Doc006', 'N006', 'C-section delivery', 2200.00),
+('Trt007', 'A007', 'Doc007', 'N007', 'Appendectomy', 1500.00),
+('Trt008', 'A008', 'Doc008', 'N008', 'Cholecystectomy', 1700.00),
+('Trt009', 'A009', 'Doc009', 'N009', 'Hernia repair', 1300.00),
+('Trt010', 'A010', 'Doc010', 'N010', 'Spinal fusion surgery', 2500.00);
+
+
+-- Insert into Medication table
+INSERT INTO Medication (MedicationID, Name, Dosage, Frequency, RecordID, DoctorID, Cost)
+VALUES 
+('Med001', 'Aspirin', '500mg', 'Once a day', 'M001', 'Doc001', 10.50),
+('Med002', 'Ibuprofen', '200mg', 'Twice a day', 'M002', 'Doc002', 12.00),
+('Med003', 'Amoxicillin', '250mg', 'Three times a day', 'M003', 'Doc003', 8.75),
+('Med004', 'Paracetamol', '500mg', 'Once a day', 'M004', 'Doc004', 6.50),
+('Med005', 'Lisinopril', '10mg', 'Once a day', 'M005', 'Doc005', 15.00),
+('Med006', 'Metformin', '500mg', 'Twice a day', 'M006', 'Doc006', 9.80),
+('Med007', 'Atorvastatin', '20mg', 'Once a day', 'M007', 'Doc007', 18.20),
+('Med008', 'Omeprazole', '20mg', 'Once a day', 'M008', 'Doc008', 14.60),
+('Med009', 'Levothyroxine', '50mcg', 'Once a day', 'M009', 'Doc009', 22.30),
+('Med010', 'Gabapentin', '300mg', 'Twice a day', 'M010', 'Doc010', 13.45);

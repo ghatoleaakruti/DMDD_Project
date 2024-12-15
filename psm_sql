@@ -1,0 +1,301 @@
+use HealthcareDB
+go
+--Stored procedures
+
+--Procedure 1 : get patient details by ID
+CREATE PROCEDURE GetPatientDetails
+    @PatientID VARCHAR(50),
+    @Name NVARCHAR(100) OUTPUT,
+    @ContactInfo NVARCHAR(100) OUTPUT
+AS
+BEGIN
+    SELECT @Name = Name, 
+           @ContactInfo = Contact 
+    FROM Patient
+    WHERE PatientID = @PatientID;
+END;
+
+--calling procedure1 to display results
+DECLARE @Name1 NVARCHAR(100), @ContactInfo1 NVARCHAR(100);
+EXEC GetPatientDetails @PatientID = P002, @Name = @Name1 OUTPUT, @ContactInfo = @ContactInfo1 OUTPUT;
+SELECT @Name1 AS FullName, @ContactInfo1 AS ContactInfo;
+
+--Procedure 2 : count appointments for a specific date
+CREATE PROCEDURE GetAppointmentsByDoctor
+    @DoctorID NVARCHAR(50),
+    @AppointmentCount INT OUTPUT
+AS
+BEGIN
+    SELECT AppointmentID, AppointmentDate, PatientID, DoctorID
+    FROM Appointment
+    WHERE DoctorID = @DoctorID;
+
+    SELECT @AppointmentCount = COUNT(*)
+    FROM Appointment
+    WHERE DoctorID = @DoctorID;
+END;
+
+--calling procedure2 to display results
+DECLARE @AppointmentCount INT;
+EXEC GetAppointmentsByDoctor @DoctorID = 'Doc001', @AppointmentCount = @AppointmentCount OUTPUT;
+SELECT @AppointmentCount AS AppointmentCount;
+
+--Procedure 3 : calculate total billing for a patient
+CREATE PROCEDURE CalculateTotalBilling
+    @PatientID VARCHAR(50),
+    @TotalAmount DECIMAL(10, 2) OUTPUT
+AS
+BEGIN
+    SELECT @TotalAmount = SUM(TotalAmount) 
+    FROM Billing
+    WHERE PatientID = @PatientID;
+END;
+
+--calling procedure3 to display results
+DECLARE @TotalAmount DECIMAL(10, 2);
+EXEC CalculateTotalBilling @PatientID = P006, @TotalAmount = @TotalAmount OUTPUT;
+SELECT @TotalAmount AS TotalBilling;
+
+--Procedure 4 : get available doctors by speciality
+CREATE PROCEDURE GetAvailableDoctors
+    @Specialty NVARCHAR(50),
+    @DoctorList NVARCHAR(MAX) OUTPUT
+AS
+BEGIN
+    SELECT @DoctorList = STRING_AGG(FirstName, ', ') 
+    FROM Doctor
+    WHERE Specialty = @Specialty;
+END;
+
+--calling procedure 4 to display results
+DECLARE @DoctorList NVARCHAR(MAX);
+EXEC GetAvailableDoctors @Specialty = 'Cardiologist', @DoctorList = @DoctorList OUTPUT;
+SELECT @DoctorList AS AvailableDoctors;
+
+--Procedure 5 : get patients without appointments
+CREATE PROCEDURE GetPatientsWithoutAppointments
+    @NoAppointmentList NVARCHAR(MAX) OUTPUT
+AS
+BEGIN
+    SELECT @NoAppointmentList = Name
+    FROM Patient
+    WHERE PatientID NOT IN (SELECT PatientID FROM Appointment);
+END;
+
+--calling procedure5 to display results
+DECLARE @NoAppointmentList NVARCHAR(MAX);
+EXEC GetPatientsWithoutAppointments @NoAppointmentList = @NoAppointmentList OUTPUT;
+SELECT @NoAppointmentList AS PatientsWithoutAppointments;
+
+--Views
+
+--View for Patient Insurance Details
+CREATE VIEW vw_PatientInsurance AS
+SELECT
+P.PatientID,
+P.Name AS PatientName,
+P.Contact,
+I.ProviderName,
+I.PolicyNumber,
+I.Coverage,
+I.ExpirationDate
+FROM Patient P
+LEFT JOIN Insurance I ON P.InsuranceID = I.InsuranceID;
+
+SELECT * FROM vw_PatientInsurance;
+
+--View for Department and Doctor Summary
+CREATE VIEW vw_DepartmentDoctorSummary AS
+SELECT
+D.DepartmentID,
+D.DepartmentName,
+D.HeadOfDepartment,
+Doc.DoctorID,
+CONCAT(Doc.FirstName,' ', Doc.LastName) AS DoctorName,
+Doc.Specialty,
+Doc.ExperienceYears
+FROM Department D
+LEFT JOIN Doctor Doc ON D.DepartmentID = Doc.DepartmentID;
+
+SELECT * FROM vw_DepartmentDoctorSummary;
+
+--View for Appointment Details
+CREATE VIEW vw_AppointmentDetails AS
+SELECT
+A.AppointmentID,
+A.AppointmentDate,
+P.PatientID,
+P.Name AS PatientName,
+CONCAT(Doc.FirstName,' ', Doc.LastName) AS DoctorName,
+Doc.Specialty
+FROM Appointment A
+LEFT JOIN Patient P ON A.PatientID = P.PatientID
+LEFT JOIN Doctor Doc ON A.DoctorID = Doc.DoctorID;
+
+SELECT * FROM vw_AppointmentDetails;
+
+--View for Billing Summary
+CREATE VIEW vw_BillingSummary AS
+SELECT
+B.BillID,
+P.Name AS PatientName,
+A.AppointmentDate,
+B.TotalAmount,
+B.PaymentStatus,
+I.ProviderName AS InsuranceProvider,
+I.Coverage
+FROM Billing B
+JOIN Patient P ON B.PatientID = P.PatientID
+JOIN Appointment A ON B.AppointmentID = A.AppointmentID
+JOIN Insurance I ON B.InsuranceID = I.InsuranceID;
+
+SELECT * FROM vw_BillingSummary WHERE PaymentStatus = 'Unpaid';
+
+--View for Medical Record Summary
+CREATE VIEW vw_MedicalRecordSummary AS
+SELECT
+MR.RecordID,
+P.Name AS PatientName,
+CONCAT(Doc.FirstName,' ', Doc.LastName) AS DoctorName,
+MR.Diagnosis,
+MR.TreatmentPlan,
+MR.Prescription
+FROM MedicalRecord MR
+JOIN Patient P ON MR.PatientID = P.PatientID
+JOIN Doctor Doc ON MR.DoctorID = Doc.DoctorID;
+
+SELECT * FROM vw_MedicalRecordSummary;
+
+--User Defined Functions
+
+--Function to Calculate Patient Age
+CREATE FUNCTION dbo.fn_GetPatientAge (@DoB DATE)
+RETURNS INT
+AS
+BEGIN
+RETURN DATEDIFF(YEAR, @DoB, GETDATE()) - CASE WHEN MONTH(@DoB)> MONTH(GETDATE()) OR
+(MONTH(@DoB) = MONTH(GETDATE()) AND DAY(@DoB)> DAY(GETDATE())) THEN 1 ELSE 0 END;
+END;
+
+SELECT dbo.fn_GetPatientAge('1990-08-15') AS Age;
+
+--Function to Get Total Billing Amount for a Patient
+CREATE FUNCTION dbo.fn_GetTotalBilled (@PatientID VARCHAR(50))
+RETURNS DECIMAL(10, 2)
+AS
+BEGIN
+DECLARE @Total DECIMAL(10, 2);
+SELECT @Total = SUM(TotalAmount)
+FROM Billing
+WHERE PatientID = @PatientID;
+RETURN ISNULL(@Total, 0.00);
+
+END;
+
+SELECT dbo.fn_GetTotalBilled('P001') AS TotalBilled;
+
+--Function to Check Insurance Validity
+CREATE FUNCTION dbo.fn_IsInsuranceValid (@InsuranceID VARCHAR(50))
+RETURNS BIT
+AS
+BEGIN
+DECLARE @IsValid BIT;
+SELECT @IsValid = CASE WHEN ExpirationDate >= GETDATE() THEN 1 ELSE 0 END
+FROM Insurance
+WHERE InsuranceID = @InsuranceID;
+RETURN ISNULL(@IsValid, 0);
+END;
+
+SELECT dbo.fn_IsInsuranceValid('I001') AS IsValidInsurance;
+
+--Function to Get Appointment Count for a Doctor
+CREATE FUNCTION dbo.fn_GetDoctorAppointmentCount (@DoctorID VARCHAR(50))
+RETURNS INT
+AS
+BEGIN
+RETURN (SELECT COUNT(*)
+FROM Appointment
+WHERE DoctorID = @DoctorID);
+END;
+
+SELECT dbo.fn_GetDoctorAppointmentCount('Doc001') AS AppointmentCount;
+
+--Function to Get Average Treatment Cost for a Department
+CREATE FUNCTION dbo.fn_GetAvgTreatmentCost (@DepartmentID VARCHAR(50))
+RETURNS DECIMAL(10, 2)
+AS
+
+BEGIN
+RETURN (SELECT AVG(T.Cost)
+FROM Treatment T
+JOIN Doctor D ON T.DoctorID = D.DoctorID
+WHERE D.DepartmentID = @DepartmentID);
+END;
+
+SELECT dbo.fn_GetAvgTreatmentCost('D001') AS AvgCost;
+
+--Triggers
+-- Create a log table for tracking changes
+CREATE TABLE PatientLog (
+    LogID INT IDENTITY PRIMARY KEY,
+    PatientID VARCHAR(50),
+    ChangeType VARCHAR(50),
+    ChangedOn DATETIME DEFAULT GETDATE(),
+    OldContact VARCHAR(15),
+    NewContact VARCHAR(15),
+    PerformedBy SYSNAME
+);
+
+-- Create the DML trigger
+CREATE TRIGGER trg_PatientAudit
+ON Patient
+AFTER UPDATE, DELETE
+AS
+BEGIN
+    -- Log updates
+    IF EXISTS (SELECT 1 FROM inserted) AND EXISTS (SELECT 1 FROM deleted)
+    BEGIN
+        INSERT INTO PatientLog (PatientID, ChangeType, OldContact, NewContact, PerformedBy)
+        SELECT 
+            d.PatientID,
+            'UPDATE',
+            d.Contact,
+            i.Contact,
+            SYSTEM_USER
+        FROM deleted d
+        INNER JOIN inserted i ON d.PatientID = i.PatientID
+        WHERE d.Contact <> i.Contact;
+    END
+
+    -- Log deletions
+    IF NOT EXISTS (SELECT 1 FROM inserted) AND EXISTS (SELECT 1 FROM deleted)
+    BEGIN
+        INSERT INTO PatientLog (PatientID, ChangeType, OldContact, PerformedBy)
+        SELECT 
+            PatientID,
+            'DELETE',
+            Contact,
+            SYSTEM_USER
+        FROM deleted;
+    END
+END;
+
+--Test the trigger
+UPDATE Patient
+SET Contact = '1111111111'
+WHERE PatientID = 'P001';
+
+select * from PatientLog
+
+
+
+
+
+
+
+
+
+
+
+
+

@@ -1,0 +1,165 @@
+-- Drop the database
+DROP DATABASE IF EXISTS HealthcareDB;
+
+CREATE DATABASE HealthcareDB;
+GO
+use HealthcareDB
+go
+
+-- Drop OrderDetails Table first (since it references Orders and Products)
+DROP TABLE IF EXISTS OrderDetails;
+
+-- Drop Sales Table next (since it references Products)
+DROP TABLE IF EXISTS Sales;
+
+-- Drop Billing Table (since it references Appointment)
+DROP TABLE IF EXISTS Billing;
+
+-- Drop Orders Table (since it references Customers)
+DROP TABLE IF EXISTS Orders;
+
+-- Drop Products Table (no foreign key constraints depend on it)
+DROP TABLE IF EXISTS Products;
+
+-- Drop Appointment Table (no foreign key constraints depend on it)
+DROP TABLE IF EXISTS Appointment;
+
+-- Drop Customers Table (no foreign key constraints depend on it)
+DROP TABLE IF EXISTS Customers;
+
+--Table for insurance data 
+CREATE TABLE Insurance (
+	InsuranceID VARCHAR(50) PRIMARY KEY,
+	ProviderName VARCHAR(100) NOT NULL,
+	PolicyNumber VARCHAR(50) NOT NULL,
+	ExpirationDate DATE CHECK (ExpirationDate >= GETDATE()),
+    Coverage VARCHAR(50)
+);
+
+--table for patient data with fk to insurance
+CREATE TABLE Patient (
+	PatientID VARCHAR(50) PRIMARY KEY,
+	Name VARCHAR(100) NOT NULL,
+	DoB DATE NOT NULL CHECK (DoB <= GETDATE()),
+	Gender CHAR(1) CHECK (Gender IN ('M', 'F', 'O')),  -- O for Other
+	Contact VARCHAR(15) NOT NULL,
+	InsuranceID VARCHAR(50),
+	FOREIGN KEY (InsuranceID) REFERENCES Insurance(InsuranceID) ON DELETE SET NULL
+);
+
+--table to store addresses of patients with foreign key to patient
+CREATE TABLE Address (
+	AddressID VARCHAR(50) PRIMARY KEY,
+	PatientID VARCHAR(50) NOT NULL,
+	StreetAddress VARCHAR(200) NOT NULL,
+	UnitNumber VARCHAR(50),
+	City VARCHAR(100) NOT NULL,
+	State CHAR(2) NOT NULL,
+	ZipCode VARCHAR(10) NOT NULL,
+	HomePhone VARCHAR(15),
+	FOREIGN KEY (PatientID) REFERENCES Patient(PatientID)
+);
+
+--table to store data of each department
+CREATE TABLE Department (
+    DepartmentID VARCHAR(50) PRIMARY KEY,
+    DepartmentName NVARCHAR(100) NOT NULL,
+    HeadOfDepartment NVARCHAR(100) NULL
+);
+
+--table to store doctor information with foreign key to their department
+CREATE TABLE Doctor (
+    DoctorID VARCHAR(50) PRIMARY KEY,
+    FirstName NVARCHAR(50) NOT NULL,
+    LastName NVARCHAR(50) NOT NULL,
+    Specialty NVARCHAR(100) NOT NULL,
+    DepartmentID VARCHAR(50) NOT NULL,
+    ExperienceYears INT NOT NULL,
+    FOREIGN KEY (DepartmentID) REFERENCES Department(DepartmentID),
+    CHECK (ExperienceYears >= 0) 
+);
+
+--appointment table to save data of each appointment for a patient with foreign key to patients is
+CREATE TABLE Appointment (
+	AppointmentID VARCHAR(50) PRIMARY KEY,
+	AppointmentDate DATETIME NOT NULL,
+	PatientID VARCHAR(50),
+    DoctorID VARCHAR(50),
+	FOREIGN KEY (PatientID) REFERENCES Patient(PatientID) ON DELETE SET NULL,
+    FOREIGN KEY (DoctorID) REFERENCES Doctor(DoctorID) ON DELETE SET NULL
+);
+
+--table to store billing data for each appointment with foreign key to patient and appointment
+CREATE TABLE Billing (
+    BillID VARCHAR(50) PRIMARY KEY,
+    PatientID VARCHAR(50) NOT NULL,
+    AppointmentID VARCHAR(50) NOT NULL,
+    InsuranceID VARCHAR(50) NOT NULL,
+    TotalAmount DECIMAL(10, 2) CHECK (TotalAmount >= 0),
+    PaymentStatus VARCHAR(20) CHECK (PaymentStatus IN ('Paid', 'Unpaid')),
+    FOREIGN KEY (PatientID) REFERENCES Patient(PatientID),
+    FOREIGN KEY (AppointmentID) REFERENCES Appointment(AppointmentID),
+    FOREIGN KEY (InsuranceID) REFERENCES Insurance(InsuranceID)
+);
+
+-- AdminStaff table with foreign key relationships to Billing and Appointment
+CREATE TABLE AdminStaff (
+	StaffID VARCHAR(50) PRIMARY KEY,
+	Role VARCHAR(50) NOT NULL CHECK (Role IN ('Receptionist', 'Billing Clerk', 'Manager')),
+	BillID VARCHAR(50),
+	AppointmentID VARCHAR(50),
+	FOREIGN KEY (BillID) REFERENCES Billing(BillID),
+	FOREIGN KEY (AppointmentID) REFERENCES Appointment(AppointmentID)
+);
+
+--nurse table with foreign keu realtionship to their department
+CREATE TABLE Nurse (
+    NurseID VARCHAR(50) PRIMARY KEY ,
+    FirstName NVARCHAR(50) NOT NULL,
+    LastName NVARCHAR(50) NOT NULL,
+    DepartmentID VARCHAR(50) NOT NULL,
+    ExperienceYears INT NOT NULL,
+    FOREIGN KEY (DepartmentID) REFERENCES Department(DepartmentID),
+    CHECK (ExperienceYears >= 0) 
+);
+
+--medical record table for each patient with references to : patient,appointment and doctor
+CREATE TABLE MedicalRecord (
+	RecordID VARCHAR(50) PRIMARY KEY,
+	PatientID VARCHAR(50) NOT NULL,
+	AppointmentID VARCHAR(50) NULL,
+	DoctorID VARCHAR(50) NOT NULL,
+	Diagnosis NVARCHAR(255) NOT NULL,
+	TreatmentPlan NVARCHAR(255) NULL,
+	Prescription NVARCHAR(255) NULL,
+	FOREIGN KEY (PatientID) REFERENCES Patient(PatientID),
+	FOREIGN KEY (AppointmentID) REFERENCES Appointment(AppointmentID),
+	FOREIGN KEY (DoctorID) REFERENCES Doctor(DoctorID)
+);
+
+--treatment table with reference to appointment and doctor
+CREATE TABLE Treatment (
+    TreatmentID VARCHAR(50) PRIMARY KEY,
+    AppointmentID VARCHAR(50) NOT NULL,
+    DoctorID VARCHAR(50) NOT NULL,
+    NurseID VARCHAR(50) NOT NULL,
+    Description VARCHAR(100) NOT NULL,
+    Cost DECIMAL(10, 2) CHECK (Cost >= 0),
+    FOREIGN KEY (AppointmentID) REFERENCES Appointment(AppointmentID),
+    FOREIGN KEY (DoctorID) REFERENCES Doctor(DoctorID),
+    FOREIGN KEY (NurseID) REFERENCES Nurse(NurseID)
+);
+
+--medication table for prescribed medication
+CREATE TABLE Medication (
+    MedicationID VARCHAR(50) PRIMARY KEY,
+    Name VARCHAR(50) NOT NULL,
+    Dosage VARCHAR(50) NOT NULL,
+    Frequency VARCHAR(50) NOT NULL,
+    RecordID VARCHAR(50) NOT NULL,
+    DoctorID VARCHAR(50) NOT NULL,
+    Cost DECIMAL(10, 2) CHECK (Cost >= 0),
+    FOREIGN KEY (RecordID) references MedicalRecord(RecordID),
+     FOREIGN KEY (DoctorID) REFERENCES Doctor(DoctorID)
+);
+
